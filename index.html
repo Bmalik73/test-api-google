@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Places API Test</title>
+    <script>
+        function getPlaceId(query) {
+            const apiKey = '';
+            const url = `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&key=${apiKey}`;
+
+            console.log('Requesting Place ID with URL:', url);
+
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data for Place ID:', data);
+                    if (data.candidates && data.candidates.length > 0) {
+                        return data.candidates[0].place_id;
+                    } else {
+                        throw new Error('Place not found');
+                    }
+                });
+        }
+
+        function getPlaceDetails(placeId) {
+            const apiKey = '';
+            const url = `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews&key=${apiKey}`;
+
+            console.log('Requesting Place Details with URL:', url);
+
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data for Place Details:', data);
+                    if (data.result) {
+                        return data.result;
+                    } else {
+                        throw new Error('Details not found');
+                    }
+                });
+        }
+
+        function displayPlaceDetails() {
+            const query = document.getElementById('place-query').value;
+            
+            getPlaceId(query)
+                .then(placeId => {
+                    console.log('Place ID:', placeId);
+                    return getPlaceDetails(placeId);
+                })
+                .then(details => {
+                    console.log('Place Details:', details);
+                    document.getElementById('place-name').innerText = details.name;
+                    document.getElementById('place-rating').innerText = details.rating;
+                    document.getElementById('user-ratings-total').innerText = details.user_ratings_total;
+                    document.getElementById('place-reviews').innerText = JSON.stringify(details.reviews, null, 2);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Google Places API Test</h1>
+    <input type="text" id="place-query" placeholder="Enter place name">
+    <button onclick="displayPlaceDetails()">Get Place Details</button>
+    <h2>Place Details</h2>
+    <p><strong>Name:</strong> <span id="place-name"></span></p>
+    <p><strong>Rating:</strong> <span id="place-rating"></span></p>
+    <p><strong>Total User Ratings:</strong> <span id="user-ratings-total"></span></p>
+    <pre id="place-reviews"></pre>
+</body>
+</html>
