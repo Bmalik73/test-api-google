@@ -3,8 +3,10 @@
 <head>
     <title>Google Places API Test</title>
     <script>
+        const apiKey = '';
+
+        // Fonction pour obtenir le Place ID d'une entreprise
         function getPlaceId(query) {
-            const apiKey = '';
             const url = `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&key=${apiKey}`;
 
             console.log('Requesting Place ID with URL:', url);
@@ -26,8 +28,8 @@
                 });
         }
 
+        // Fonction pour obtenir les détails d'un lieu à partir de son Place ID
         function getPlaceDetails(placeId) {
-            const apiKey = '';
             const url = `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews&key=${apiKey}`;
 
             console.log('Requesting Place Details with URL:', url);
@@ -49,12 +51,14 @@
                 });
         }
 
+        // Fonction pour afficher les détails d'une entreprise
         function displayPlaceDetails() {
             const query = document.getElementById('place-query').value;
-            
+
             getPlaceId(query)
                 .then(placeId => {
                     console.log('Place ID:', placeId);
+                    document.getElementById('place-id').innerText = placeId; // Affiche le Place ID
                     return getPlaceDetails(placeId);
                 })
                 .then(details => {
@@ -62,7 +66,31 @@
                     document.getElementById('place-name').innerText = details.name;
                     document.getElementById('place-rating').innerText = details.rating;
                     document.getElementById('user-ratings-total').innerText = details.user_ratings_total;
-                    document.getElementById('place-reviews').innerText = JSON.stringify(details.reviews, null, 2);
+
+                    const reviewsContainer = document.getElementById('place-reviews');
+                    reviewsContainer.innerHTML = '';
+                    if (details.reviews && details.reviews.length > 0) {
+                        details.reviews.forEach(review => {
+                            const reviewElement = document.createElement('div');
+                            reviewElement.classList.add('review');
+
+                            const authorName = document.createElement('p');
+                            authorName.innerHTML = `<strong>Author:</strong> ${review.author_name}`;
+                            reviewElement.appendChild(authorName);
+
+                            const rating = document.createElement('p');
+                            rating.innerHTML = `<strong>Rating:</strong> ${review.rating}`;
+                            reviewElement.appendChild(rating);
+
+                            const text = document.createElement('p');
+                            text.innerHTML = `<strong>Review:</strong> ${review.text}`;
+                            reviewElement.appendChild(text);
+
+                            reviewsContainer.appendChild(reviewElement);
+                        });
+                    } else {
+                        reviewsContainer.innerText = 'No reviews found.';
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -70,15 +98,23 @@
                 });
         }
     </script>
+    <style>
+        .review {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Google Places API Test</h1>
     <input type="text" id="place-query" placeholder="Enter place name">
     <button onclick="displayPlaceDetails()">Get Place Details</button>
     <h2>Place Details</h2>
+    <p><strong>Place ID:</strong> <span id="place-id"></span></p>
     <p><strong>Name:</strong> <span id="place-name"></span></p>
     <p><strong>Rating:</strong> <span id="place-rating"></span></p>
     <p><strong>Total User Ratings:</strong> <span id="user-ratings-total"></span></p>
-    <pre id="place-reviews"></pre>
+    <div id="place-reviews"></div>
 </body>
 </html>
